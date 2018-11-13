@@ -18,7 +18,7 @@ class LoginRequired(View):
         return super(LoginRequired, self).dispatch(*args, **kwargs)
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the index page.")
+    return HttpResponse("Hello, world. You're at the FlyOmics index page.")
 
 # class ExperimentListView(LoginRequired, ListView):
 

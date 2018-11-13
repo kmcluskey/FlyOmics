@@ -108,3 +108,5 @@ misc.xml
 .idea/libraries/R_User_Library.xml
 db.sqlite3
 .idea
+node_modules
+static/bundles

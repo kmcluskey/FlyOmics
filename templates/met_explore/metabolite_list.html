@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+<h1>Metabolites</h1>
+<ul>
+{% for peak in object_list %}
+    <li>{{peak}}</li>
+
+{% empty %}
+    <li>No peaks yet.</li>
+{% endfor %}
+</ul>

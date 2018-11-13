@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js --progress --colors --mode production",
-    "dev": "webpack --config webpack.config.js --watch --mode development"
+    "dev": "webpack --config webpack.config.js --watch --mode development --display-error-details"
   },
   "repository": {
     "type": "git",
@@ -59,6 +59,7 @@
     "datatables.net-scroller-dt": "^1.4.4",
     "datatables.net-select": "^1.2.5",
     "datatables.net-select-dt": "^1.2.5",
+    "highcharts": "^6.2.0",
     "jquery": "^3.3.1",
     "popper.js": "^1.14.4",
     "react": "^16.5.2",
