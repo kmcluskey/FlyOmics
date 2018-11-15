@@ -24,13 +24,13 @@
     <div class="card-header">
       <ul class="nav nav-tabs card-header-tabs">
         <li class="nav-item">
-          <a class="nav-link active" href="metabolite_list.html">Tissues</a>
+          <a class="nav-link active" href={% url 'tissue_metabolites' %}>Tissues</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="life_stage_metabolites.html">Life Stages</a>
+          <a class="nav-link" href={% url "life_stage_metabolites"%}>Life Stages</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="mutant_metabolites.html">Mutants</a>
+          <a class="nav-link" href={% url "mutant_metabolites"%}>Mutants</a>
         </li>
       </ul>
     </div>

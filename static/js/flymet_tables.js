@@ -11,11 +11,9 @@ require('datatables.net-bs4/css/dataTables.bootstrap4.min.css');
 require('datatables.net-scroller-bs4/css/scroller.bootstrap4.min.css');
 require('datatables.net-select-bs4/css/select.bootstrap4.min.css');
 
-//
 require('pdfmake/build/pdfmake.js');
 require('pdfmake/build/vfs_fonts.js');
 
-//require( 'pdfmake' );
 require( 'datatables.net-bs4' );
 require( 'datatables.net-buttons-bs4');
 require( 'datatables.net-buttons/js/buttons.colVis.js' );  // Column visibility
