@@ -1,4 +1,4 @@
-
+//This is the JavaScript that is required for the metabolite_search page.
 import {initialise_table} from './flymet_tables';
 import {singleMet_intensity_chart} from './flymet_highcharts.js';
 import {test_chart} from './flymet_highcharts.js';

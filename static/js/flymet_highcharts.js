@@ -1,5 +1,4 @@
-// A function to initialise a standard table. The midpoint is the neutral value
-// and is most likely a temporary way to calculate significance in the data for display purposes
+/* This contains scripts for producing highchart tables for the FlyMet website*/
 
 const Highcharts = require('highcharts');
 

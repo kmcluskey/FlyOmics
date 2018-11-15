@@ -31,9 +31,7 @@ module.exports = {
             $: "jquery",
             jQuery: "jquery",
             'window.jQuery': 'jquery',
-            'window.$': 'jquery',
-            d3: 'd3',
-            _: "underscore"
+            'window.$': 'jquery'
         }),
         // for alasql
         new IgnorePlugin(/(^fs$|cptable|jszip|xlsx|^es6-promise$|^net$|^tls$|^forever-agent$|^tough-cookie$|cpexcel|^path$|^request$|react-native|^vertx$)/),
