@@ -1,9 +1,7 @@
+
 import {initialise_table} from './flymet_tables';
 import {singleMet_intensity_chart} from './flymet_highcharts.js';
 import {test_chart} from './flymet_highcharts.js';
-
-
-
 
 //Update the metabolite side panel depending on which row is selected.
 //Let tissue name = the first text sent back from the row (more or less)

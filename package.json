@@ -1,7 +1,7 @@
 {
-  "name": "web_omics",
-  "version": "1.0.0",
-  "description": "A dashboard to integrate and explore different types of biological -omics data",
+  "name": "FlyMet",
+  "version": "0.1.0",
+  "description": "FlyMet: Bringing metabolomics to Drosophila",
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js --progress --colors --mode production",
@@ -12,6 +12,8 @@
     "url": "git+https://github.com/joewandy/WebOmics.git"
   },
   "keywords": [
+    "Drosophila",
+    "metabolites",
     "visualisation",
     "data",
     "explorer",
@@ -19,12 +21,12 @@
     "omics",
     "integration"
   ],
-  "author": "Joe Wandy <joe.wandy@glasgow.ac.uk>",
+  "author": "Karen McLuskey <Karen.McLuskey@glasgow.ac.uk>",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/joewandy/WebOmics/issues"
+    "url": ""
   },
-  "homepage": "https://github.com/joewandy/WebOmics#readme",
+  "homepage": "",
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/plugin-transform-runtime": "^7.1.0",
@@ -49,16 +51,16 @@
     "block-ui": "^2.70.1",
     "bootstrap": "^4.1.3",
     "d3": "^5.7.0",
-    "datatables.net": "^1.10.16",
-    "datatables.net-buttons": "^1.5.1",
-    "datatables.net-buttons-dt": "^1.5.1",
-    "datatables.net-dt": "^1.10.16",
-    "datatables.net-responsive": "^2.2.1",
-    "datatables.net-responsive-dt": "^2.2.1",
-    "datatables.net-scroller": "^1.4.4",
-    "datatables.net-scroller-dt": "^1.4.4",
-    "datatables.net-select": "^1.2.5",
-    "datatables.net-select-dt": "^1.2.5",
+    "datatables.net": "^1.10.19",
+    "datatables.net-buttons": "^1.5.4",
+    "datatables.net-buttons-dt": "^1.5.4",
+    "datatables.net-dt": "^1.10.19",
+    "datatables.net-responsive": "^2.2.3",
+    "datatables.net-responsive-dt": "^2.2.3",
+    "datatables.net-scroller": "^1.5.1",
+    "datatables.net-scroller-dt": "^1.5.1",
+    "datatables.net-select": "^1.2.7",
+    "datatables.net-select-dt": "^1.2.7",
     "highcharts": "^6.2.0",
     "jquery": "^3.3.1",
     "popper.js": "^1.14.4",

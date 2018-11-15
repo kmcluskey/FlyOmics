@@ -12,6 +12,13 @@ def index(request):
 
 # Create your views here.
 
+def metabolite_search(request):
+    """
+    View to return the metabolite serach page
+    :returns: Render met_explore/metabolite_search
+    """
+
+    return render(request, 'met_explore/metabolite_search.html')
 
 class MetaboliteListView(ListView):
 

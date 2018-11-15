@@ -14,7 +14,6 @@
     {% render_bundle 'base' 'css' %}
 
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <link href="../css/Comfortaa_roboto.css" rel='stylesheet' type='text/css'>
     <link href="https://fonts.googleapis.com/css?family=Sue+Ellen+Francisco" rel="stylesheet">
 
 
@@ -38,7 +37,7 @@
           <a class="nav-link" href="about.html">About FlyMet</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="met_ex_tissues.html">Metabolite Explorer</a>
+          <a class="nav-link" href="metabolite_list.html">Metabolite Explorer</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="pway_ex_tissues.html">Pathway Explorer</a>
@@ -53,6 +52,18 @@
 
 {% block body_block %}
 {% endblock %}
+
+<footer class="page-footer footer">
+  <!--Image-->
+  <span>
+    <a href="index.html">
+      <img src="{% static 'images/FlyMet_logo_round.png'%}" class="img-fluid-logos" alt="Logo">
+    </a>
+  </span>
+  <span class = "footer_text align-middle">
+    ...bringing metabolomics to <i> Drosophila </i>
+  </span>
+</footer>
 
 {% render_bundle 'base' 'js' %}
 {% block js_block %}

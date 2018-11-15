@@ -11,6 +11,8 @@ module.exports = {
     entry: {
         base: './static/js/base',
         metabolite_list: './static/js/metabolite_list',
+        metabolite_search: './static/js/metabolite_search',
+
     },
 
     output: {
