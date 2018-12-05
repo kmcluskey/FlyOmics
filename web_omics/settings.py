@@ -40,6 +40,7 @@ class Common(Configuration):
         'webpack_loader',
         'web_omics.users',
         'registration',
+        'rest_framework',
         'met_explore'
     ]
 

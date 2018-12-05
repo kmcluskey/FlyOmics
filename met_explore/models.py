@@ -4,18 +4,19 @@ class Sample(models.Model):
     """
     Model class defining an instance of an experimental Sample including the tissue and life-stage from which it came
     """
-
-    name = models.CharField(max_length=250, blank=False)
+    # Here the sample name is unique as this is important for processing FlyMet data
+    name = models.CharField(max_length=250, unique=True, blank=False)
     life_stage = models.CharField(max_length=250, blank=False)
     tissue = models.CharField(max_length=250)
+    group = models.CharField(max_length=250, blank=True, null=True)
     mutant = models.CharField(max_length=250, blank=True, null=True)
 
-    def __unicode__(self):
+    def  __str__(self):
         """
         Method to return a representation of the Sample
         """
 
-        return "Sample" + self.sample.name
+        return "Sample " + self.name
 
 
 class Peak(models.Model):
@@ -23,20 +24,25 @@ class Peak(models.Model):
     Model class representing a basic peak including the compound as a simple string.
     """
 
+    psec_id =  models.DecimalField(max_digits=20, decimal_places=10) #The secondary peak ID from PiMP
     m_z = models.DecimalField(max_digits=20, decimal_places=10)
     rt = models.DecimalField(max_digits=20, decimal_places=10)
     polarity = models.CharField(max_length=8)
-    anno_type = models.CharField(max_length=100)
-    cmpd_name = models.CharField(max_length=600) # At this stage just a name for the metabolite
-    cmpd_identifiers = models.CharField(max_length=600) # Any idenifiers we can associate with the peak
+    cmpd_name = models.CharField(max_length=600)  # At this stage just a name for the metabolite
+    cmpd_formula=models.CharField(max_length=100)
+    cmpd_identifiers = models.CharField(max_length=600)  # Any identifiers we can associate with the peak
+    identified = models.CharField(max_length=100) #Should be set at True or False
+    frank_anno = models.CharField(max_length=600, null=True)
+    adduct = models.CharField(max_length=100)
 
-    def __unicode__(self):
+
+    def  __str__(self):
         """
         Method to return a representation of the SamplePeak including the name of the compound
         :return: String:
         """
 
-        return "Peak" + self.peak.id + "peak_compound " + self.peak.cmpd_name
+        return "Peak" + self.id + "peak_compound " + self.cmpd_name
 
 
 class SamplePeak(models.Model):
@@ -45,7 +51,7 @@ class SamplePeak(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
     intensity = models.FloatField(null=True, blank=True)
 
-    def __unicode__(self):
+    def  __str__(self):
 
         """
         Method to return a representation of the SamplePeak including the name of the compound
