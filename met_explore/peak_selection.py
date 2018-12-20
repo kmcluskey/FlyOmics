@@ -41,6 +41,9 @@ class PeakSelector(object):
         headers = list(self.selected_df.columns.values)
         self.final_df = pd.DataFrame(columns=headers)
 
+        print ("in the beginning the final ID DF is ")
+        display(self.final_df)
+
         logger.info("PeakSelector initialised with ", len(self.unique_sec_ids),"peaks/unique ids")
 
 
@@ -48,7 +51,7 @@ class PeakSelector(object):
 
         print ("Constructing the peak DF")
         unique_sec_ids = self.selected_df['sec_id'].unique()
-        # unique_sec_ids = [2212,3976]
+        # unique_sec_ids = [3722]
 
         for sid in unique_sec_ids:
             # Collect a single sec_id into a DF
@@ -126,6 +129,8 @@ class PeakSelector(object):
         :param standard_cmpds: A dataframe for the peak containing only the standard compounds
         :return: A new row for the final df based on FrAnk or None (if FrAnk None)
         """
+
+        print ("selecting standard compound")
         new_row = None
         display(standard_cmpds)
         name_match_dic = {}
