@@ -134,12 +134,11 @@ class PeakSelector(object):
     def remove_duplicates_on_mass_rt(self):
         """
         Take the originally constructed DF and look for sec_ids that have more than one compound associated with them
-        First look for the matching name/adduct pairs based on RT and neutral mass.
-
+        First look for the matching name/opposite-adduct pairs based on RT and neutral mass.
+        If one is found that matches, delete the other duplicate peaks.
         """
         duplicate_df = self.final_df[self.final_df.sec_id.duplicated()]
         dup_ids = duplicate_df['sec_id'].values
-
         print("dup_ids are ", dup_ids)
 
         for dupid in dup_ids:
@@ -148,12 +147,9 @@ class PeakSelector(object):
             display(dup_peaks)
 
             #     Assuming that all of the data for these duplicate peaks are the same, take the first value.
-
             neutral_mass = dup_peaks['neutral_mass'].iloc[0]
             rt = dup_peaks['rt'].iloc[0]
             adduct = dup_peaks['adduct'].iloc[0]
-
-            #     keeping = False #When it's true we have found the compound to keep so should delete all others.
 
             min_mass = neutral_mass - MASS_TOL
             max_mass = neutral_mass + MASS_TOL
@@ -167,7 +163,6 @@ class PeakSelector(object):
 
             keep_index = {}
             dup_indexes = list(dup_peaks.index.values)
-            dup_names = dup_peaks['compound'].values
 
             matching_cmpd_df = self.final_df[mass_match & rt_match & no_duplicates]
 
@@ -175,7 +170,7 @@ class PeakSelector(object):
 
             if matching_cmpd_df.index.any():
 
-                print("Other peaks that match the duplicate peak on mass and rt are:")
+                print("Other single peaks that match the duplicate peak on mass and rt are:")
                 display(matching_cmpd_df)
 
                 #   Peak ids for the peaks that match the duplicate peak.
@@ -203,45 +198,40 @@ class PeakSelector(object):
                 print("keep_index", keep_index)
 
                 if len(keep_index) == 1:
-                    print("There is only one duplicate peak compound highlighted to keep so can delete others")
+                    print("There is only one duplicate peak compound highlighted and therefore deleting others")
                     keys = list(keep_index.keys())
                     keep = keys[0]
                     self.drop_duplicates(dup_indexes, keep)
 
 
                 elif len(keep_index) > 1:
-                    print("Choose the compound with the smallest absolute difference from the RT")
+                    print("More than one compound in mass/rt range and therefore keeping the one with the smallest absolute difference from the RT")
                     min_index = min(keep_index, key=keep_index.get)
                     keep = min_index
-
                     self.drop_duplicates(dup_indexes, keep)
 
     def remove_double_duplicates(self):
 
+        """
+        If we have more than one peak with matching duplicate compounds
+        Keep the compound with the closest RT to that found in the standard csv file (run with the mass spec)
+        Delete the other compound(s) from the peak
+        """
+        print ("Checking for peaks with duplicate compounds that match (compound name/adduct) other duplicate peaks")
         duplicate_df = self.final_df[self.final_df.sec_id.duplicated()]
         dup_ids = duplicate_df['sec_id'].values
 
-
-        ######NEED to think about the order all this is happening - best to llok for above first, the duplicate names and final choose on RT.
-        print("No matching compounds found by looking at rt and neutral mass matches")
-        print ("so we are checking out duplicates that are of the same compounds")
-
         duplicates = self.final_df['sec_id'].isin(dup_ids)
         all_duplicates = self.final_df[duplicates]
-        display(all_duplicates)
 
         # if there are any duplicate names in the duplicate peaks then we have
         if any(all_duplicates['compound'].duplicated()):
 
             # Get the compound names
             dup_compounds = all_duplicates[all_duplicates['compound'].duplicated(keep=False)]
-
+            print ("`Duplicate peaks with duplicate compounds")
             display(dup_compounds)
-
             sids = list(np.unique(dup_compounds['sec_id'].values))
-            print(type(sids))
-
-            print("the sec_ids are ", sids)
 
             df_to_check = self.final_df[self.final_df['sec_id'].isin(sids)]
             name_rt_dict = {}
@@ -255,26 +245,26 @@ class PeakSelector(object):
 
             sec_id_chosen = self.final_df.loc[keep_index, 'sec_id']
 
-            print(sec_id_chosen)
             dup_peaks = self.final_df[self.final_df["sec_id"] == sec_id_chosen]
             dup_indexes = list(dup_peaks.index.values)
-
-            #####If we drop this one we then look at the other duplicate on name and choose the other!!!!
 
             self.drop_duplicates(dup_indexes, keep_index)
 
 
     def remove_duplicate_on_name_adduct(self):
 
+        """
+        If any of the compounds in the duplicate peaks match on name and adduct to others stored then delete them
+        """
+
         duplicate_df = self.final_df[self.final_df.sec_id.duplicated()]
         dup_ids = duplicate_df['sec_id'].values
 
-        print("dup_ids are", dup_ids)
-
         print("Looking for compounds that have already been chosen with the same name and adduct")
-        print("Duplicates at this stage are:")
+
         duplicates = self.final_df['sec_id'].isin(dup_ids)
         all_duplicates = self.final_df[duplicates]
+        print ("current duplicates are:")
         display(all_duplicates)
 
         # Check if there are any of the same compounds already stored.
@@ -296,7 +286,6 @@ class PeakSelector(object):
                 matching_rows = self.final_df[name_match & adduct_match & no_duplicates]
 
                 if matching_rows.index.any():
-                    print(index)
                     print("we have aready strored this compound/adduct ratio so dropping this")
                     display(matching_rows)
                     self.final_df = self.final_df.drop(index)
@@ -304,38 +293,37 @@ class PeakSelector(object):
                     print("no matching row for ", name, adduct)
 
 
-    ##### This one just has to take a sec_id and choose the compound closest to the RT of the standard cmpd db.
     def remove_duplicates_on_rt(self):
-
+        """
+        For a peak with duplicate compounds - keep the one with the cloests RT to the STD DB expected value.
+        Delete the others.
+        """
         duplicate_df =self.final_df[self.final_df['sec_id'].duplicated(keep=False)]
+        print ("the duplicates at this stage are: ")
         display(duplicate_df)
-
         dup_ids = set(duplicate_df['sec_id'].values)
         name_rt_dict = {}
-        print("dup_ids are", dup_ids)
 
         for dupid in dup_ids:
 
             dup_indexes = []
             dup_peaks = self.final_df[self.final_df.sec_id == dupid]
 
-
             for index, row in dup_peaks.iterrows():
                 dup_indexes.append(index)
-
                 name_rt_dict[index] = [row['compound'], row['rt']]
 
-                print(name_rt_dict)
 
             keep_index = self.get_closest_rt_match(name_rt_dict)
-
-            print(keep_index)
-            print(dup_indexes)
             self.drop_duplicates(dup_indexes, keep_index)
 
 
     def get_closest_rt_match(self, name_rt_dict):
-
+        """
+        For a peak with duplicate compounds - keep the one with the closest RT to the STD DB expected value.
+        :param: A dictionary the names and RT of the compounds
+        :returns: The index of the compound that should be kept i.e. the closest match.
+       """
         abs_dic = {}
         for index, name_rt in name_rt_dict.items():
             print(index)
@@ -357,14 +345,18 @@ class PeakSelector(object):
 
 
     def drop_duplicates(self, dup_indexes, keep_index):
+        """
+        A method to drop rows from a DF given the index to keep and those of all the duplicate rows for a peak.
+        :param: dup_indexes - indices of the rows of a peak with duplicate compounds
+        :param: keep_index - the index of the row that we want to keep
 
+        """
         dup_indexes.remove(keep_index)
 
         for index_to_drop in dup_indexes:
             print("dropping this")
             display(self.final_df.loc[[index_to_drop]])
             self.final_df = self.final_df.drop(index_to_drop)
-
 
 
     def select_standard_cmpd(self, sid_df, standard_cmpds):
