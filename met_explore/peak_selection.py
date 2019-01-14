@@ -326,15 +326,11 @@ class PeakSelector(object):
        """
         abs_dic = {}
         for index, name_rt in name_rt_dict.items():
-            print(index)
             dup_name = name_rt[0]
             dup_rt = name_rt[1]
-            print(dup_name, dup_rt)
             for name, rt in self.std_temp_dict.items():
                 if name == dup_name:
-                    print(name, rt)
                     abs_value = abs(dup_rt - rt)
-                    print(abs_value)
                     abs_dic[index] = abs_value
 
         print(abs_dic)
