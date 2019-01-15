@@ -1,15 +1,10 @@
-from IPython.display import display, HTML
-from met_explore.models import *
-from met_explore.serializers import *
+from IPython.display import display
 from difflib import SequenceMatcher
-from collections import OrderedDict
 
 import pandas as pd
 import numpy as np
 import logging
-import os
-import json
-import collections
+
 
 logger = logging.getLogger(__name__)
 
@@ -392,7 +387,6 @@ class PeakSelector(object):
                 identifiers = self.get_all_identifiers(cmpd_rows_df)
                 new_row.at['identifier'] = identifiers
 
-        print("sending back a new row from select_standard_compound of type ", type(new_row))
         return new_row
 
     # Choose a compound bases on how closely it matches the name of the FrAnK annotation. If it is less than 50% return
@@ -525,7 +519,6 @@ class PeakSelector(object):
             adduct = ma[1]
             neutral_mass = self.get_neutral_mass(mass, adduct)
             neutral_masses.append(neutral_mass)
-        print(type(neutral_masses))
 
         df['neutral_mass'] = np.asarray(neutral_masses)
 

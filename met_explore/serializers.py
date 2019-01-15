@@ -11,7 +11,7 @@ class SampleSerializer(serializers.ModelSerializer):
 class PeakSerializer(serializers.ModelSerializer):
     class Meta:
         model = Peak
-        fields = ('pid','m_z','rt','polarity','cmpd_name', 'cmpd_formula','cmpd_identifiers','identified','frank_anno','adduct')
+        fields = ('psec_id','m_z', 'neutral_mass','rt','polarity','cmpd_name', 'cmpd_formula','cmpd_identifiers','identified','frank_anno','adduct', 'db')
 
 
 class SamplePeakSerializer(serializers.ModelSerializer):

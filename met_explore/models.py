@@ -22,18 +22,21 @@ class Sample(models.Model):
 class Peak(models.Model):
     """
     Model class representing a basic peak including the compound as a simple string.
+    One peak per secondary peak ID in PiMP
     """
 
-    psec_id =  models.DecimalField(max_digits=20, decimal_places=10) #The secondary peak ID from PiMP
+    psec_id =  models.IntegerField(unique= True) #The secondary peak ID from PiMP
     m_z = models.DecimalField(max_digits=20, decimal_places=10)
+    neutral_mass =  models.DecimalField(max_digits=20, decimal_places=10)
     rt = models.DecimalField(max_digits=20, decimal_places=10)
     polarity = models.CharField(max_length=8)
     cmpd_name = models.CharField(max_length=600)  # At this stage just a name for the metabolite
-    cmpd_formula=models.CharField(max_length=100)
+    cmpd_formula = models.CharField(max_length=100)
     cmpd_identifiers = models.CharField(max_length=600)  # Any identifiers we can associate with the peak
     identified = models.CharField(max_length=100) #Should be set at True or False
     frank_anno = models.CharField(max_length=600, null=True)
     adduct = models.CharField(max_length=100)
+    db = models.CharField(max_length=20)
 
 
     def  __str__(self):
