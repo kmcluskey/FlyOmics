@@ -18,9 +18,9 @@ def populate_samples(sample_csv):
                   "mutant": sample[4]})
         if sample_serializer.is_valid():
             db_sample = sample_serializer.save()
-            logger.info("sample saved ", db_sample.name)
+            print ("sample saved ", db_sample.name)
         else:
-            logger.error(sample_serializer.errors)
+            print (sample_serializer.errors)
 
 
 # This requires the input taken from the construct_peak_df method/
@@ -41,9 +41,9 @@ def populate_peaks(peak_df):
                   "frank_anno": frank_annot, "adduct": peak[7], "db": peak[11]})
         if peak_serializer.is_valid():
             db_peak = peak_serializer.save()
-            logger.info("peak saved ", db_peak.psec_id)
+            print ("peak saved ", db_peak.psec_id)
         else:
-            logger.error(peak_serializer.errors)
+            print (peak_serializer.errors)
 
 #Takes a peak intensity DF and a pimp peak id / secondary id dictionary to populate the PeakSamples.
 #The dictionary is passed in as the Peak model only stores the psec id and not the pid from PiMP.
@@ -59,16 +59,16 @@ def populate_peaksamples(intensity_df, pids_sids_dict):
             sec_id = pids_sids_dict[index]
             intensity = value
             peak = Peak.objects.get(psec_id=sec_id)
-            logger.info("we are adding the data for: ", sample, peak, "intensity of", intensity)
+            print ("we are adding the data for: ", sample, peak, "intensity of", intensity)
 
             # Populate the DB
             samplepeak_serializer = SamplePeakSerializer(
                 data={"peak": peak.id, "sample": sample.id, "intensity": intensity})
             if samplepeak_serializer.is_valid():
                 db_samplepeak = samplepeak_serializer.save()
-                logger.info("peak saved ", db_samplepeak.peak)
+                print ("peak saved ", db_samplepeak.peak)
             else:
-                logger.error(samplepeak_serializer.errors)
+                print (samplepeak_serializer.errors)
 
 
 
