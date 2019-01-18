@@ -23,11 +23,12 @@ def populate_samples(sample_csv):
             logger.error(sample_serializer.errors)
 
 
-# This requires the input in the order taken from the construct_peak_df method/
+# This requires the input taken from the construct_peak_df method/
 # It requires all secondary_ids to be unique and reports any errors (throw?)
 # To get the list and dict back from the json.dumps just use json.loads
 
-def populate_peaks(peak_array):
+def populate_peaks(peak_df):
+    peak_array = peak_df.values
     for peak in peak_array:
         print(peak)
         cmpd_id = json.dumps(peak[12])
@@ -43,3 +44,32 @@ def populate_peaks(peak_array):
             logger.info("peak saved ", db_peak.psec_id)
         else:
             logger.error(peak_serializer.errors)
+
+#Takes a peak intensity DF and a pimp peak id / secondary id dictionary to populate the PeakSamples.
+#The dictionary is passed in as the Peak model only stores the psec id and not the pid from PiMP.
+
+def populate_peaksamples(intensity_df, pids_sids_dict):
+
+    columns = list(intensity_df.columns)
+    for col in columns[:-1]:
+        sample = Sample.objects.get(name=col)
+        this_col = intensity_df[col]
+        # Get the data for the SamplePeak
+        for index, value in this_col.iteritems():
+            sec_id = pids_sids_dict[index]
+            intensity = value
+            peak = Peak.objects.get(psec_id=sec_id)
+            logger.info("we are adding the data for: ", sample, peak, "intensity of", intensity)
+
+            # Populate the DB
+            samplepeak_serializer = SamplePeakSerializer(
+                data={"peak": peak.id, "sample": sample.id, "intensity": intensity})
+            if samplepeak_serializer.is_valid():
+                db_samplepeak = samplepeak_serializer.save()
+                logger.info("peak saved ", db_samplepeak.peak)
+            else:
+                logger.error(samplepeak_serializer.errors)
+
+
+
+

@@ -45,7 +45,7 @@ class Peak(models.Model):
         :return: String:
         """
 
-        return "Peak" + self.id + "peak_compound " + self.cmpd_name
+        return "Peak " + str(self.id) + " " + self.cmpd_name
 
 
 class SamplePeak(models.Model):
@@ -61,7 +61,7 @@ class SamplePeak(models.Model):
         :return: String:
         """
 
-        return "Sample" + self.sample.name + "peak" + self.peak.id + "peak_compound "+ self.peak.cmpd_name
+        return "Sample: " + self.sample.name + " Peak: " + str(self.peak.id) + " "+ self.peak.cmpd_name
 
 
 

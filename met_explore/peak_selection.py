@@ -1,5 +1,6 @@
 from IPython.display import display
 from difflib import SequenceMatcher
+from collections import OrderedDict
 
 import pandas as pd
 import numpy as np
@@ -19,11 +20,12 @@ EXT_RT_TOL = 20 #Extended RT tolerance as the peak picking seemed odd
 
 class PeakSelector(object):
 
-    # The constructor just takes in a peak_json file from PiMP
-    def __init__(self, peak_json_file):
+    # The constructor just in a peak_json file from PiMP
+    # and an intensity json file from Pimp (samples [col], peaks [rows], intensities [cells]
+    def __init__(self, peak_json_file, intensity_json_file):
 
         peak_details_df = pd.read_json(peak_json_file)
-
+        self.intensity_json_file = intensity_json_file
         # Taking the RT from the Stds_ALL.csv file and multipling by 60 - hopefully can
         # read this directly from a CSV file in the future
 
@@ -43,14 +45,14 @@ class PeakSelector(object):
         self.unique_sec_ids = self.selected_df['sec_id'].unique()
 
         #This is the new df to store the chosen peaks.
-        headers = list(self.selected_df.columns.values)
-        self.final_df = pd.DataFrame(columns=headers)
 
 
         logger.info("PeakSelector initialised with ", len(self.unique_sec_ids),"peaks/unique ids")
 
 
     def construct_peak_df(self):
+        headers = list(self.selected_df.columns.values)
+        peak_df = pd.DataFrame(columns=headers)
 
         print ("Constructing the peak DF")
         unique_sec_ids = self.selected_df['sec_id'].unique()
@@ -73,7 +75,7 @@ class PeakSelector(object):
                 standard_cmpds = sid_df[sid_df.db == 'stds_db']
                 num_std_cmpds = standard_cmpds.shape[0]
 
-                # If there is only one standard compound add this to the final DF and collect identifiers.
+                # If there is only one standard compound add this to the peak DF and collect identifiers.
                 if (num_std_cmpds == 1):
                     print("we have only one standard compound")
                     cmpd_id = sid_df[sid_df.db == "stds_db"]['cmpd_id'].values[0]
@@ -85,24 +87,24 @@ class PeakSelector(object):
                     print("the number of standard compounds for sid is", sid, "is", num_std_cmpds)
                     new_row = self.select_standard_cmpd(sid_df, standard_cmpds)
 
-                # If a new_row has been returned for this SID - add it to the final_df
+                # If a new_row has been returned for this SID - add it to the peak df
                 if new_row is not None:
 
                     print("we are adding the row for sid", sid)
                     display(pd.DataFrame(new_row).T)
-                    self.final_df = self.final_df.append(new_row)
+                    peak_df = peak_df.append(new_row)
 
                     # If the new_row has not been determined for this SID
                 else:
 
                     unique_cmpd_ids = sid_df['cmpd_id'].unique()
 
-                    # For each unique compound id add a row to the final df, this will produce duplicates for later
+                    # For each unique compound id add a row to the peak df, this will produce duplicates for later
                     for ucid in unique_cmpd_ids:
                         new_row = self.get_peak_by_cmpd_id(sid_df, ucid)
                         print("we are adding the row: for sid", sid)
                         display(pd.DataFrame(new_row).T)
-                        self.final_df = self.final_df.append(new_row)
+                        peak_df = peak_df.append(new_row)
 
                         # Else nothing identified so look at the fragmentation data.
             else:
@@ -111,33 +113,61 @@ class PeakSelector(object):
                 new_row = self.select_on_frank(sid_df)
                 print("we are adding the row: for sid", sid)
                 display(pd.DataFrame(new_row).T)
-                self.final_df = self.final_df.append(new_row)
+                peak_df = peak_df.append(new_row)
 
 
         # Quite a few duplicates stiff exist from the Standard compound identification.
         # These methods attempt to tackle this in a sensible manner.
 
-        self.remove_duplicates_on_mass_rt()
-        self.remove_double_duplicates()
-        self.remove_duplicate_on_name_adduct()
-        self.remove_duplicates_on_rt()
+        peak_df = self.remove_duplicates_on_mass_rt(peak_df)
+        peak_df = self.remove_double_duplicates(peak_df)
+        peak_df = self.remove_duplicate_on_name_adduct(peak_df)
+        peak_df = self.remove_duplicates_on_rt(peak_df)
 
-        print("There are", self.final_df['sec_id'].nunique(), "unique compounds out of", self.final_df.shape[0], "rows added")
+        print("There are", peak_df['sec_id'].nunique(), "unique compounds out of", peak_df.shape[0], "rows added")
 
-        return self.final_df
+        return peak_df
 
-    def remove_duplicates_on_mass_rt(self):
+
+    def construct_int_df(self, peak_df):
+
+        """
+        A method to return a intensity DF of peaks to match those
+        :param peak_df: All of the peaks we want to match intenisites to.
+        :return: int_details_df - a DF filtered to contain only the peaks in the peak_df
+        :return: pids_sids_dict - a dictionary of the pimp ids / pimp sec_ids for the peaks used.
+
+        """
+        int_details_df =  pd.read_json(self.intensity_json_file)
+
+        ### Get a dictionary pf pids:sec_id from the final peak df.
+        pids_sids_dict = {}
+
+        for index, row in peak_df.iterrows():
+            pids_sids_dict[row['pid']] = row['sec_id']
+
+        for index, row in int_details_df.iterrows():
+            if index not in pids_sids_dict:
+                int_details_df = int_details_df.drop(index)
+
+        #Add the sec_ids to the dictionary file
+        print("returning an intensity DF with", int_details_df.shape[0], "peaks")
+
+        return int_details_df, pids_sids_dict
+
+
+    def remove_duplicates_on_mass_rt(self, peak_df):
         """
         Take the originally constructed DF and look for sec_ids that have more than one compound associated with them
         First look for the matching name/opposite-adduct pairs based on RT and neutral mass.
         If one is found that matches, delete the other duplicate peaks.
         """
-        duplicate_df = self.final_df[self.final_df.sec_id.duplicated()]
+        duplicate_df = peak_df[peak_df.sec_id.duplicated()]
         dup_ids = duplicate_df['sec_id'].values
         print("dup_ids are ", dup_ids)
 
         for dupid in dup_ids:
-            dup_peaks = self.final_df[self.final_df.sec_id == dupid]
+            dup_peaks = peak_df[peak_df.sec_id == dupid]
             print("duplicate peaks are: ")
             display(dup_peaks)
 
@@ -152,14 +182,14 @@ class PeakSelector(object):
             min_rt = rt - EXT_RT_TOL
             max_rt = rt + EXT_RT_TOL
 
-            mass_match = self.final_df['neutral_mass'].between(min_mass, max_mass, inclusive=True)
-            rt_match = self.final_df['rt'].between(min_rt, max_rt, inclusive=True)
-            no_duplicates = self.final_df['sec_id'] != dupid
+            mass_match = peak_df['neutral_mass'].between(min_mass, max_mass, inclusive=True)
+            rt_match = peak_df['rt'].between(min_rt, max_rt, inclusive=True)
+            no_duplicates = peak_df['sec_id'] != dupid
 
             keep_index = {}
             dup_indexes = list(dup_peaks.index.values)
 
-            matching_cmpd_df = self.final_df[mass_match & rt_match & no_duplicates]
+            matching_cmpd_df = peak_df[mass_match & rt_match & no_duplicates]
 
             # If we have stored another peak within a particular neutral_mass and rt tolerance.
 
@@ -196,16 +226,18 @@ class PeakSelector(object):
                     print("There is only one duplicate peak compound highlighted and therefore deleting others")
                     keys = list(keep_index.keys())
                     keep = keys[0]
-                    self.drop_duplicates(dup_indexes, keep)
+                    peak_df = self.drop_duplicates(dup_indexes, keep, peak_df)
 
 
                 elif len(keep_index) > 1:
                     print("More than one compound in mass/rt range and therefore keeping the one with the smallest absolute difference from the RT")
                     min_index = min(keep_index, key=keep_index.get)
                     keep = min_index
-                    self.drop_duplicates(dup_indexes, keep)
+                    peak_df = self.drop_duplicates(dup_indexes, keep, peak_df)
 
-    def remove_double_duplicates(self):
+        return peak_df
+
+    def remove_double_duplicates(self, peak_df):
 
         """
         If we have more than one peak with matching duplicate compounds
@@ -213,11 +245,11 @@ class PeakSelector(object):
         Delete the other compound(s) from the peak
         """
         print ("Checking for peaks with duplicate compounds that match (compound name/adduct) other duplicate peaks")
-        duplicate_df = self.final_df[self.final_df.sec_id.duplicated()]
+        duplicate_df = peak_df[peak_df.sec_id.duplicated()]
         dup_ids = duplicate_df['sec_id'].values
 
-        duplicates = self.final_df['sec_id'].isin(dup_ids)
-        all_duplicates = self.final_df[duplicates]
+        duplicates = peak_df['sec_id'].isin(dup_ids)
+        all_duplicates = peak_df[duplicates]
 
         # if there are any duplicate names in the duplicate peaks then we have
         if any(all_duplicates['compound'].duplicated()):
@@ -228,7 +260,7 @@ class PeakSelector(object):
             display(dup_compounds)
             sids = list(np.unique(dup_compounds['sec_id'].values))
 
-            df_to_check = self.final_df[self.final_df['sec_id'].isin(sids)]
+            df_to_check = peak_df[peak_df['sec_id'].isin(sids)]
             name_rt_dict = {}
 
             for index, row in df_to_check.iterrows():
@@ -238,27 +270,29 @@ class PeakSelector(object):
 
             keep_index = self.get_closest_rt_match(name_rt_dict)
 
-            sec_id_chosen = self.final_df.loc[keep_index, 'sec_id']
+            sec_id_chosen = peak_df.loc[keep_index, 'sec_id']
 
-            dup_peaks = self.final_df[self.final_df["sec_id"] == sec_id_chosen]
+            dup_peaks = peak_df[peak_df["sec_id"] == sec_id_chosen]
             dup_indexes = list(dup_peaks.index.values)
 
-            self.drop_duplicates(dup_indexes, keep_index)
+            peak_df = self.drop_duplicates(dup_indexes, keep_index, peak_df)
+
+        return peak_df
 
 
-    def remove_duplicate_on_name_adduct(self):
+    def remove_duplicate_on_name_adduct(self, peak_df):
 
         """
         If any of the compounds in the duplicate peaks match on name and adduct to others stored then delete them
         """
 
-        duplicate_df = self.final_df[self.final_df.sec_id.duplicated()]
+        duplicate_df = peak_df[peak_df.sec_id.duplicated()]
         dup_ids = duplicate_df['sec_id'].values
 
         print("Looking for compounds that have already been chosen with the same name and adduct")
 
-        duplicates = self.final_df['sec_id'].isin(dup_ids)
-        all_duplicates = self.final_df[duplicates]
+        duplicates = peak_df['sec_id'].isin(dup_ids)
+        all_duplicates = peak_df[duplicates]
         print ("current duplicates are:")
         display(all_duplicates)
 
@@ -267,33 +301,35 @@ class PeakSelector(object):
         # For each secondary_id
         for dupid in dup_ids:
 
-            duplicates = self.final_df[self.final_df['sec_id'] == dupid]
+            duplicates = peak_df[peak_df['sec_id'] == dupid]
 
             for index, row in duplicates.iterrows():
 
                 name = row['compound']
                 adduct = row['adduct']
 
-                name_match = self.final_df['compound'] == name
-                adduct_match = self.final_df['adduct'] == adduct
-                no_duplicates = self.final_df['sec_id'] != dupid
+                name_match = peak_df['compound'] == name
+                adduct_match = peak_df['adduct'] == adduct
+                no_duplicates = peak_df['sec_id'] != dupid
 
-                matching_rows = self.final_df[name_match & adduct_match & no_duplicates]
+                matching_rows = peak_df[name_match & adduct_match & no_duplicates]
 
                 if matching_rows.index.any():
                     print("we have aready strored this compound/adduct ratio so dropping this")
                     display(matching_rows)
-                    self.final_df = self.final_df.drop(index)
+                    peak_df = peak_df.drop(index)
                 else:
                     print("no matching row for ", name, adduct)
 
+        return peak_df
 
-    def remove_duplicates_on_rt(self):
+
+    def remove_duplicates_on_rt(self, peak_df):
         """
         For a peak with duplicate compounds - keep the one with the cloests RT to the STD DB expected value.
         Delete the others.
         """
-        duplicate_df =self.final_df[self.final_df['sec_id'].duplicated(keep=False)]
+        duplicate_df =peak_df[peak_df['sec_id'].duplicated(keep=False)]
         print ("the duplicates at this stage are: ")
         display(duplicate_df)
         dup_ids = set(duplicate_df['sec_id'].values)
@@ -302,7 +338,7 @@ class PeakSelector(object):
         for dupid in dup_ids:
 
             dup_indexes = []
-            dup_peaks = self.final_df[self.final_df.sec_id == dupid]
+            dup_peaks = peak_df[peak_df.sec_id == dupid]
 
             for index, row in dup_peaks.iterrows():
                 dup_indexes.append(index)
@@ -310,7 +346,9 @@ class PeakSelector(object):
 
 
             keep_index = self.get_closest_rt_match(name_rt_dict)
-            self.drop_duplicates(dup_indexes, keep_index)
+            peak_df = self.drop_duplicates(dup_indexes, keep_index, peak_df)
+
+        return peak_df
 
 
     def get_closest_rt_match(self, name_rt_dict):
@@ -335,7 +373,7 @@ class PeakSelector(object):
         return keep_index
 
 
-    def drop_duplicates(self, dup_indexes, keep_index):
+    def drop_duplicates(self, dup_indexes, keep_index, peak_df):
         """
         A method to drop rows from a DF given the index to keep and those of all the duplicate rows for a peak.
         :param: dup_indexes - indices of the rows of a peak with duplicate compounds
@@ -346,8 +384,10 @@ class PeakSelector(object):
 
         for index_to_drop in dup_indexes:
             print("dropping this")
-            display(self.final_df.loc[[index_to_drop]])
-            self.final_df = self.final_df.drop(index_to_drop)
+            display(peak_df.loc[[index_to_drop]])
+            peak_df = peak_df.drop(index_to_drop)
+
+        return peak_df
 
 
     def select_standard_cmpd(self, sid_df, standard_cmpds):
@@ -389,13 +429,13 @@ class PeakSelector(object):
 
         return new_row
 
-    # Choose a compound bases on how closely it matches the name of the FrAnK annotation. If it is less than 50% return
+    # Choose a compound based on how closely it matches the name of the FrAnK annotation. If it is less than 50% return
     # the FrAnk details instead
 
     def select_on_frank(self, sid_df):
         """
         :param sid_df: a dataframe of the rows of the peaks for a single peak ID
-        :return: A new row for the final df based on FrAnk (should not be None)
+        :return: A new row for the peak df based on FrAnk (should not be None)
         """
         new_row = None
         name_match_dic = {}
@@ -463,7 +503,7 @@ class PeakSelector(object):
         """
         A method to return a row for an identified peak given the chosen compound id
         :param: A df containing a set of peaks with a single ID and the unique cmpd ID
-        :returns: A new_row (peak) to be added to the final df.
+        :returns: A new_row (peak) to be added to the peak df.
         """
         # new_row = None  # Clear the new row at this stage
         cmpd_rows_df = sid_df[sid_df.cmpd_id == ucid]
