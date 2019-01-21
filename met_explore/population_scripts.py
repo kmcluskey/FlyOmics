@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 def populate_samples(sample_csv):
 
     sample_details = np.genfromtxt(sample_csv, delimiter=',', dtype=str)[2:]
-    for s in sample_details:
-        sample = s.split()
-
+    print ("sd_type", sample_details)
+    for sample in sample_details:
+        # sample = s.split()
         sample_serializer = SampleSerializer(
             data={"name": sample[0], "group": sample[1], "life_stage": sample[2], "tissue": sample[3],
                   "mutant": sample[4]})
